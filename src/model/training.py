@@ -102,7 +102,7 @@ def train_model(
     loss.update_weights(best_loss)
 
     if log:
-        print(best_epoch)
-        print(min_loss_test)
+        print(f"Best epoch: {best_epoch}")
+        print(f"Best test loss: {min_loss_test}")
 
     return history

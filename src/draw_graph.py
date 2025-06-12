@@ -1,5 +1,5 @@
 # Source: https://github.com/karpathy/micrograd
-# Author: Andrej Doe (GitHub user: @karpathy)
+# Author: Andrej Karpathy (GitHub user: @karpathy)
 # Date: 2025-06-12
 # License: MIT
 # Note: Without modification.
