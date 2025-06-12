@@ -4,7 +4,7 @@ import copy
 
 
 def train_model(
-    # Data    
+    # Data
     inputs_train,
     inputs_test,
     targets_train,
@@ -20,6 +20,8 @@ def train_model(
     # Early Stopping
     early_stopping_patience,
     early_stopping_delta,
+    # Other
+    log=True,
 ):
 
     data_size_train = len(inputs_train)
@@ -40,9 +42,7 @@ def train_model(
             losses = []
             for sample_index in range(batch_size):
                 # Use shuffled index
-                index = indices[
-                    batch_index * batch_size + sample_index
-                ]
+                index = indices[batch_index * batch_size + sample_index]
 
                 for input_index, input in enumerate(inputs):
                     input.data = inputs_train[index][input_index]
@@ -62,9 +62,10 @@ def train_model(
         history["train_loss"].append(average_loss_train)
 
         # To compare train and test loss on same weights - we need average loss test from last epoch (before backprop)
-        print(
-            f"Epoch {epoch}: loss={average_loss_train}, test_loss={average_loss_test}"
-        )
+        if log:
+            print(
+                f"Epoch {epoch}: loss={average_loss_train}, test_loss={average_loss_test}"
+            )
 
         # Validation
         losses_test = []
@@ -100,8 +101,8 @@ def train_model(
     # Use best model weights
     loss.update_weights(best_loss)
 
-    print(best_epoch)
-
-    print(min_loss_test)
+    if log:
+        print(best_epoch)
+        print(min_loss_test)
 
     return history
