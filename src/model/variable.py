@@ -1,7 +1,8 @@
 import numpy as np
 
+
 class Variable:
-    def __init__(self, label = "", data = 0.0, _children = (), _op = "", trainable = False):
+    def __init__(self, label="", data=0.0, _children=(), _op="", trainable=False):
         self.label = label
         self._forward = None
         self.data = data
@@ -21,13 +22,15 @@ class Variable:
 
         def forward():
             return self.forward() + other.forward()
+
         result._forward = forward
 
         def backward():
             self.grad = 1.0 * result.grad
             other.grad = 1.0 * result.grad
+
         result._backward = backward
-        
+
         return result
 
     def __mul__(self, other):
@@ -35,38 +38,92 @@ class Variable:
 
         def forward():
             return self.forward() * other.forward()
+
         result._forward = forward
-        
+
         def backward():
             self.grad = other.data * result.grad
             other.grad = self.data * result.grad
+
         result._backward = backward
 
         return result
-    
+
     def tanh(self):
         result = Variable(_children=(self,), _op="tanh")
 
         def forward():
             return np.tanh(self.forward())
+
         result._forward = forward
-        
+
         def backward():
             self.grad = (1 - np.tanh(self.data) ** 2) * result.grad
+
         result._backward = backward
 
         return result
-    
+
+    def relu(self):
+        result = Variable(_children=(self,), _op="relu")
+
+        def forward():
+            return np.maximum(0, self.forward())
+
+        result._forward = forward
+
+        def backward():
+            self.grad = (0 if self.data <= 0 else 1) * result.grad
+
+        result._backward = backward
+
+        return result
+
+    def sigmoid(self):
+        result = Variable(_children=(self,), _op="sigmoid")
+
+        def calculation(x):
+            return 1 / (1 + np.exp(-x))
+
+        def forward():
+            return calculation(self.forward())
+
+        result._forward = forward
+
+        def backward():
+            self.grad = (calculation(self.data) * (1 - calculation(self.data))) * result.grad
+
+        result._backward = backward
+
+        return result
+
     def mse(self, target):
         result = Variable(_children=(self, target), _op="mse")
 
         def forward():
             return (target.forward() - self.forward()) ** 2
+
         result._forward = forward
 
         def backward():
-            self.grad = 2 * (self.data - target.data)
-            target.grad = 2 * (target.data - self.data)
+            self.grad = (2 * (self.data - target.data)) * result.grad
+
+        result._backward = backward
+
+        return result
+
+    def bce(self, target):
+        result = Variable(_children=(self, target), _op="bce")
+
+        def forward():
+            y = target.forward()
+            y_hat = self.forward()
+            return -(y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
+
+        result._forward = forward
+
+        def backward():
+            self.grad = ((self.data - target.data) / (self.data * (1 - self.data))) * result.grad
         result._backward = backward
 
         return result
@@ -86,7 +143,7 @@ class Variable:
             node = nodes.pop()
             nodes.extend(list(node._prev))
             node._backward()
-            if (node._trainable):
+            if node._trainable:
                 node.data = node.data - node.grad * learning_rate
 
     def update_weights(self, source):
@@ -99,5 +156,5 @@ class Variable:
             nodes_current.extend(list(node_current._prev))
             nodes_source.extend(list(node_source._prev))
 
-            if (node_current._trainable):
+            if node_current._trainable:
                 node_current.data = node_source.data
